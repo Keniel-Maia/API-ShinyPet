@@ -1,31 +1,35 @@
 # syntax=docker/dockerfile:1
 
-# Build stage: compile the application and create the executable jar
-FROM eclipse-temurin:17-jdk-alpine AS build
+# ==========================
+#  STAGE 1: BUILD
+# ==========================
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy Maven wrapper and project metadata first to leverage Docker layer caching
-COPY APIShinyPET/mvnw ./
-COPY APIShinyPET/.mvn .mvn
+# Copia o POM primeiro (cache das dependências)
 COPY APIShinyPET/pom.xml ./
+RUN mvn -B dependency:go-offline
 
-# Ensure the Maven wrapper script is executable and download dependencies
-RUN chmod +x mvnw \
-    && ./mvnw -B dependency:go-offline
-
-# Copy the application source code and build the Spring Boot jar
+# Copia o código-fonte
 COPY APIShinyPET/src ./src
-RUN ./mvnw -B clean package -DskipTests
 
-# Runtime stage: run the application with a lightweight JRE image
+# Compila o projeto e cria o .jar (mesmo que ainda não exista)
+RUN if [ ! -f target/*.jar ]; then mvn -B clean package -DskipTests; fi
+
+# ==========================
+#  STAGE 2: RUNTIME
+# ==========================
 FROM eclipse-temurin:17-jre-alpine AS runtime
 WORKDIR /app
 
-# Copy the packaged jar from the build stage
-COPY --from=build /app/target/APIShinyPET-0.0.1-SNAPSHOT.jar app.jar
+# Copia o .jar gerado no estágio anterior
+COPY --from=build /app/target/*.jar app.jar
 
-# Expose the default Spring Boot port
+# Expõe a porta da aplicação
 EXPOSE 8080
 
-# Start the application
+# Define a variável de porta usada pelo Spring
+ENV PORT=8080
+
+# Inicia o aplicativo
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
