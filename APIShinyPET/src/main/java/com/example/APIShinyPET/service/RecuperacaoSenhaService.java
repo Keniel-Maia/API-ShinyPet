@@ -85,13 +85,8 @@ public class RecuperacaoSenhaService {
     }
 
     private String gerarToken() {
-        SecureRandom random = new SecureRandom();
-        byte[] bytes = new byte[16];
-        random.nextBytes(bytes);
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
+    SecureRandom random = new SecureRandom();
+    int token = 100_000_000 + random.nextInt(900_000_000); // Garante 9 dígitos
+    return String.valueOf(token);
+}
 }
