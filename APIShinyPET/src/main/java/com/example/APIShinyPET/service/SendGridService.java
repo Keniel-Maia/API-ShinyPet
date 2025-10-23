@@ -3,6 +3,13 @@ package com.example.APIShinyPET.service;
 import com.sendgrid.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.sendgrid.Email;
+import com.sendgrid.Content;
+import com.sendgrid.Mail;
+import com.sendgrid.Method;
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.SendGrid;
 
 import java.io.IOException;
 
