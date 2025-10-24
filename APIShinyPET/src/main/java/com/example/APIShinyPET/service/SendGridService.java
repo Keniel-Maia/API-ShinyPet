@@ -1,6 +1,5 @@
 package com.example.APIShinyPET.service;
 
-import com.sendgrid.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.sendgrid.Email;
