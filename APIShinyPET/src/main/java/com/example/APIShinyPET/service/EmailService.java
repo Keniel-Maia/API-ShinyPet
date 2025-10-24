@@ -19,7 +19,7 @@ public class EmailService {
 
             helper.setTo(email);
             helper.setSubject("Cadastro realizado com sucesso");
-            helper.setFrom("shinypetcotil@gmail.com", "Shiny Pet");
+            helper.setFrom("shinypetcotil@gmail.com");
 
             String corpoHtml = String.format("""
                 <div style="font-family: Josefin Sans, sans-serif; background-color: #f7f1f1; padding: 20px; border-radius: 12px; border: 2px solid #DA81CE; max-width: 600px; margin: auto;">
@@ -41,7 +41,7 @@ public class EmailService {
             mailSender.send(mensagem);
 
         } catch (Exception e) {
-            System.out.println("Erro ao enviar e-mail: " + e.getMessage());
+            e.printStackTrace(); // ou use um logger se preferir
         }
     }
 }
