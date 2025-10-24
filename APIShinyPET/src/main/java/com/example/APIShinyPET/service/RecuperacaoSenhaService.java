@@ -2,14 +2,15 @@ package com.example.APIShinyPET.service;
 
 import com.example.APIShinyPET.Models.Usuario;
 import com.example.APIShinyPET.Repository.UsuarioRepository;
-import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -18,9 +19,16 @@ public class RecuperacaoSenhaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final WebClient webClient;
 
+    @Value("${resend.api.key}")
+    private String resendApiKey;
+
+    public RecuperacaoSenhaService(WebClient.Builder builder) {
+        this.webClient = builder.baseUrl("https://api.resend.com").build();
+    }
+
+    @Async
     public void enviarTokenPorEmail(String email) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
         if (usuarioOpt.isPresent()) {
@@ -34,38 +42,38 @@ public class RecuperacaoSenhaService {
             usuarioRepository.save(usuario);
 
             String corpoHtml = String.format("""
-            <div style="font-family: Josefin Sans, sans-serif; background-color: #f7f1f1; padding: 20px; border-radius: 12px; border: 2px solid #DA81CE; max-width: 600px; margin: auto;">
-                <div style="text-align: center;">
-                    <h2 style="color: #A591F2;">Redefinição de Senha</h2>
-                    <p style="color: #7c8595; font-size: 16px; line-height: 1.5;">
-                        Recebemos uma solicitação para redefinir sua senha no <strong>Shiny Pet</strong>.<br><br>
-                        Aqui está seu token de recuperação:<br>
-                        <strong style="font-size: 18px; color: #A591F2;">%s</strong><br><br>
-                        Esse token é válido por 30 minutos.<br>
-                        Copie e cole no aplicativo para continuar o processo de redefinição.<br><br>
-                        Com carinho,<br>
-                        Equipe Shiny Pet
-                    </p>
+                <div style="font-family: Josefin Sans, sans-serif; background-color: #f7f1f1; padding: 20px; border-radius: 12px; border: 2px solid #DA81CE; max-width: 600px; margin: auto;">
+                    <div style="text-align: center;">
+                        <h2 style="color: #A591F2;">Redefinição de Senha</h2>
+                        <p style="color: #7c8595; font-size: 16px; line-height: 1.5;">
+                            Recebemos uma solicitação para redefinir sua senha no <strong>Shiny Pet</strong>.<br><br>
+                            Aqui está seu token de recuperação:<br>
+                            <strong style="font-size: 18px; color: #A591F2;">%s</strong><br><br>
+                            Esse token é válido por 30 minutos.<br>
+                            Copie e cole no aplicativo para continuar o processo de redefinição.<br><br>
+                            Com carinho,<br>
+                            Equipe Shiny Pet
+                        </p>
+                    </div>
                 </div>
-            </div>
-        """, token);
+            """, token);
 
-            try {
-                MimeMessage mensagem = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(mensagem, true, "UTF-8");
+            Map<String, Object> payload = Map.of(
+                "from", "Shiny Pet <onboarding@resend.dev>",
+                "to", email,
+                "subject", "Shiny Pet - Redefinição de Senha",
+                "html", corpoHtml
+            );
 
-                helper.setTo(email);
-                helper.setSubject("Shiny Pet - Redefinição de Senha");
-                helper.setFrom("shinypetcotil@gmail.com", "Shiny Pet");
-                helper.setText(corpoHtml, true);
-
-                mailSender.send(mensagem);
-            } catch (Exception e) {
-                System.out.println("Erro ao enviar e-mail: " + e.getMessage());
-            }
+            webClient.post()
+                .uri("/emails")
+                .header("Authorization", "Bearer " + resendApiKey)
+                .bodyValue(payload)
+                .retrieve()
+                .bodyToMono(String.class)
+                .subscribe(response -> System.out.println("Token enviado por e-mail: " + response));
         }
     }
-
 
     public boolean validarToken(String token) {
         return usuarioRepository.findByTokenAndTokenExpiraAfter(token, LocalDateTime.now()).isPresent();
