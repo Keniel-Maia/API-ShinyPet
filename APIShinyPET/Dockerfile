@@ -5,15 +5,19 @@ FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # 1) Cache de dependências
-COPY pom.xml .
+COPY pom.xml ./
 RUN mvn -B -DskipTests dependency:go-offline || true
 
 # 2) Código-fonte + build
 COPY src ./src
+
+# 3) Força limpeza de cache local para garantir que SendGrid seja resolvido corretamente
+RUN mvn dependency:purge-local-repository -DmanualInclude="com.sendgrid:sendgrid-java" -DreResolve=false || true
+
+# 4) Compila o projeto
 RUN mvn -B clean package -DskipTests
 
-# 3) Normaliza o nome do artefato para um nome único (app.jar)
-#    Evita problemas com múltiplos JARs no target/ e com COPY com wildcard
+# 5) Normaliza o nome do artefato para um nome único (app.jar)
 RUN set -eux; \
     JAR="$(ls -1 target/*.jar | head -n 1)"; \
     cp "$JAR" app.jar
