@@ -10,14 +10,9 @@ RUN mvn -B -DskipTests dependency:go-offline || true
 
 # 2) Código-fonte + build
 COPY src ./src
-
-# 3) Força limpeza de cache local para garantir que SendGrid seja resolvido corretamente
-RUN mvn dependency:purge-local-repository -DmanualInclude="com.sendgrid:sendgrid-java" -DreResolve=false || true
-
-# 4) Compila o projeto
 RUN mvn -B clean package -DskipTests
 
-# 5) Normaliza o nome do artefato para um nome único (app.jar)
+# 3) Normaliza o nome do artefato para um nome único (app.jar)
 RUN set -eux; \
     JAR="$(ls -1 target/*.jar | head -n 1)"; \
     cp "$JAR" app.jar
@@ -26,7 +21,6 @@ RUN set -eux; \
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Copia o JAR já normalizado
 COPY --from=build /app/app.jar /app/app.jar
 
 EXPOSE 8080
