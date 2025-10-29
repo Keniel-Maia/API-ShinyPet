@@ -38,7 +38,7 @@ public class EmailService {
         """, nomeCompleto);
 
         Map<String, Object> payload = Map.of(
-            "from", "Shiny Pet <onboarding@resend.dev>",
+            "from", "Shiny Pet <ola@shinypet.shop>",
             "to", email,
             "subject", "Cadastro realizado com sucesso",
             "html", corpoHtml
