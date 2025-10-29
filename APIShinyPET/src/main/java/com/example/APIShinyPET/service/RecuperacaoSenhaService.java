@@ -59,7 +59,7 @@ public class RecuperacaoSenhaService {
             """, token);
 
             Map<String, Object> payload = Map.of(
-                "from", "Shiny Pet <onboarding@resend.dev>",
+               "from", "Shiny Pet <ola@shinypet.shop>",
                 "to", email,
                 "subject", "Shiny Pet - Redefinição de Senha",
                 "html", corpoHtml
