@@ -42,6 +42,10 @@ public class agendamentos {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Timestamp criadoEm;
 
+    @Column(name = "canceladoPor", length = 50)
+    private String canceladoPor;
+
+
     @Column(name = "precoFinal", precision = 10, scale = 2, nullable = false)
     private BigDecimal precoFinal;
 
@@ -143,4 +147,16 @@ public void setMotivo(String motivo) {
     public void setPrecoFinal(BigDecimal precoFinal) {
         this.precoFinal = precoFinal;
     }
+
+    public String getCanceladoPor() {
+    return canceladoPor;
+}
+
+public void setCanceladoPor(String canceladoPor) {
+    this.canceladoPor = canceladoPor;
+}
+
+
+
+    
 }
