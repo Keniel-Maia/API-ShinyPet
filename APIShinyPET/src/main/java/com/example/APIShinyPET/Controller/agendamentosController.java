@@ -101,33 +101,47 @@ public class agendamentosController {
         return agendamentoRepo.findByStatus(status);
     }
 
-    @PutMapping("/atualizarStatus/{id}")
-    public ResponseEntity<String> atualizarStatus(@PathVariable("id") int id, @RequestBody Map<String, String> request) {
-        String statusRecebido = request.get("status");
-        Optional<agendamentos> agendamentoOpt = agendamentoRepo.findById(id);
-        if (!agendamentoOpt.isPresent()) {
-            return ResponseEntity.status(404).body("Agendamento não encontrado.");
-        }
-        agendamentos agendamento = agendamentoOpt.get();
-        agendamentos.Status novoStatus;
-        switch (statusRecebido.toLowerCase()) {
-            case "pendente":
-                novoStatus = agendamentos.Status.pendente;
-                break;
-            case "confirmado":
-                novoStatus = agendamentos.Status.confirmado;
-                break;
-            case "concluido":
-                novoStatus = agendamentos.Status.concluido;
-                break;
-            case "cancelado":
-                novoStatus = agendamentos.Status.cancelado;
-                break;
-            default:
-                return ResponseEntity.badRequest().body("Status inválido.");
-        }
-        agendamento.setStatus(novoStatus);
-        agendamentoRepo.save(agendamento);
-        return ResponseEntity.ok("Status atualizado com sucesso!");
+@PutMapping("/atualizarStatus/{id}")
+public ResponseEntity<String> atualizarStatus(@PathVariable("id") int id, @RequestBody Map<String, String> request) {
+    String statusRecebido = request.get("status");
+    String motivo = request.get("motivoCancelamento"); // campo obrigatório para cancelamento
+
+    Optional<agendamentos> agendamentoOpt = agendamentoRepo.findById(id);
+    if (!agendamentoOpt.isPresent()) {
+        return ResponseEntity.status(404).body("Agendamento não encontrado.");
     }
+
+    agendamentos agendamento = agendamentoOpt.get();
+    agendamentos.Status novoStatus;
+
+    switch (statusRecebido.toLowerCase()) {
+        case "pendente":
+            novoStatus = agendamentos.Status.pendente;
+            break;
+        case "confirmado":
+            novoStatus = agendamentos.Status.confirmado;
+            break;
+        case "concluido":
+            novoStatus = agendamentos.Status.concluido;
+            break;
+        case "cancelado":
+            novoStatus = agendamentos.Status.cancelado;
+            break;
+        default:
+            return ResponseEntity.badRequest().body("Status inválido.");
+    }
+
+    // ⚠️ Validação obrigatória do motivo para cancelamento
+    if (novoStatus == agendamentos.Status.cancelado) {
+        if (motivo == null || motivo.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Motivo do cancelamento é obrigatório.");
+        }
+        agendamento.setMotivo(motivo.trim());
+    }
+
+    agendamento.setStatus(novoStatus);
+    agendamentoRepo.save(agendamento);
+    return ResponseEntity.ok("Status atualizado com sucesso!");
+}
+
 }
