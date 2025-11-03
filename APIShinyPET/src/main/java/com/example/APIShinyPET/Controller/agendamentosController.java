@@ -105,6 +105,7 @@ public class agendamentosController {
 public ResponseEntity<String> atualizarStatus(@PathVariable("id") int id, @RequestBody Map<String, String> request) {
     String statusRecebido = request.get("status");
     String motivo = request.get("motivoCancelamento"); // campo obrigatório para cancelamento
+    String canceladoPor = request.get("canceladoPor"); // novo campo: tosador ou cliente
 
     Optional<agendamentos> agendamentoOpt = agendamentoRepo.findById(id);
     if (!agendamentoOpt.isPresent()) {
@@ -131,16 +132,24 @@ public ResponseEntity<String> atualizarStatus(@PathVariable("id") int id, @Reque
             return ResponseEntity.badRequest().body("Status inválido.");
     }
 
-    // ⚠️ Validação obrigatória do motivo para cancelamento
+    // ⚠️ Validação de motivo obrigatória
     if (novoStatus == agendamentos.Status.cancelado) {
         if (motivo == null || motivo.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Motivo do cancelamento é obrigatório.");
         }
         agendamento.setMotivo(motivo.trim());
+
+        // registra quem cancelou
+        if (canceladoPor != null && !canceladoPor.trim().isEmpty()) {
+            agendamento.setCanceladoPor(canceladoPor.trim().toLowerCase());
+        } else {
+            agendamento.setCanceladoPor("não informado");
+        }
     }
 
     agendamento.setStatus(novoStatus);
     agendamentoRepo.save(agendamento);
+
     return ResponseEntity.ok("Status atualizado com sucesso!");
 }
 
