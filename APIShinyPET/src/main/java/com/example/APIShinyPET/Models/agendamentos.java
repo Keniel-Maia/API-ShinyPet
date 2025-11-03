@@ -32,6 +32,9 @@ public class agendamentos {
     @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
 
+    @Column(name = "motivoCancelamento", columnDefinition = "TEXT")
+    private String motivo;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "ENUM('pendente', 'confirmado', 'concluido', 'cancelado')")
     private Status status;
@@ -67,6 +70,15 @@ public class agendamentos {
     public void setUsuarioId(int usuarioId) {
         this.usuarioId = usuarioId;
     }
+
+    public String getMotivo() {
+    return motivo;
+}
+
+public void setMotivo(String motivo) {
+    this.motivo = motivo;
+}
+
 
     public int getPetId() {
         return petId;
